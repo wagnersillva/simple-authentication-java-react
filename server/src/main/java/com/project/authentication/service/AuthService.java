@@ -2,6 +2,7 @@ package com.project.authentication.service;
 
 import com.project.authentication.core.exceptions.NotFoundRegisterException;
 import com.project.authentication.core.exceptions.UnauthorizedException;
+import com.project.authentication.core.exceptions.UserBlockedException;
 import com.project.authentication.model.AuthenticationAttempt;
 import src.dto.auth.AuthResponseDTO;
 import src.dto.auth.LoginRequestDTO;
@@ -46,7 +47,7 @@ public class AuthService {
             switch (attempts) {
                 case 1 -> authReponse.setMessage("A senha está errada, tem 2 tentativas restantes.");
                 case 2 -> authReponse.setMessage("A senha está errada, tem 1 tentativa.");
-                case 3 -> authReponse.setMessage("A senha está errada, usuário bloqueado.");
+                case 3 -> authReponse.setMessageAndUserBlocked("A senha está errada, usuário bloqueado.");
             }
         } else {
             authReponse.setUsername(user.getUsername());
@@ -66,12 +67,16 @@ public class AuthService {
         if(blockedAt != null){
             boolean canUnlock = now.isAfter(blockedAt) || now.isEqual(blockedAt);
 
-            if(!canUnlock) throw new UnauthorizedException("Usuário está bloqueado.");
+            if(!canUnlock) throw new UserBlockedException("Usuário está bloqueado.");
 
             user.setBlockDate(null);
             userRepository.save(user);
             authenticationAttemptService.validateAllAttempts(user.getUsername());
         }
+    }
+
+    private void validateUser(String username){
+        validateUser(userRepository.findByUsername(username));
     }
 
     private int setAuthenticationAttempts(User user, String passwordFail, String ipAddress){
@@ -100,6 +105,8 @@ public class AuthService {
         if(!isValid){
             response.put("message", "Não foi encontrado registro para esse username.");
         }
+
+        validateUser(username);
 
         response.put("isValid", isValid);
 

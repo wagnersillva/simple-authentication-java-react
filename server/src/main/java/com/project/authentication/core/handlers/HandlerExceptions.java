@@ -2,6 +2,7 @@ package com.project.authentication.core.handlers;
 
 import com.project.authentication.core.exceptions.ExceptionResponse;
 import com.project.authentication.core.exceptions.NotFoundRegisterException;
+import com.project.authentication.core.exceptions.UserBlockedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -35,6 +36,11 @@ public class HandlerExceptions extends ResponseEntityExceptionHandler {
         return responseEntity(ex, httpStatus);
     }
 
+    @ExceptionHandler({UserBlockedException.class})
+    public final ResponseEntity<Object> handleUserBlockedException(Exception ex){
+        return responseEntity(ex, HttpStatus.UNAUTHORIZED, true);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<String> errors = ex.getBindingResult().getFieldErrors().stream().map(FieldError::getDefaultMessage).collect(Collectors.toList());
@@ -46,7 +52,11 @@ public class HandlerExceptions extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(httpStatus).body(new ExceptionResponse(new Date(), ex.getMessage()));
     }
 
-    private ResponseEntity<Object> responseEntity(String message,HttpStatus httpStatus){
+    private ResponseEntity<Object> responseEntity(Exception ex, HttpStatus httpStatus, Boolean userBlocked){
+        return ResponseEntity.status(httpStatus).body(new ExceptionResponse(new Date(), ex.getMessage(), userBlocked));
+    }
+
+    private ResponseEntity<Object> responseEntity(String message, HttpStatus httpStatus){
         return ResponseEntity.status(httpStatus).body(new ExceptionResponse(new Date(), message));
     }
 

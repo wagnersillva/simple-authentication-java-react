@@ -13,11 +13,18 @@ public class ExceptionResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Date timestamp;
-    private String error;
+    private String message;
+    private Boolean userBlocked = false;
 
     public ExceptionResponse(Date timestamp, String message){
         this.timestamp = timestamp;
-        this.error = message;
+        this.message = message;
+    };
+
+    public ExceptionResponse(Date timestamp, String message, Boolean userBlocked){
+        this.timestamp = timestamp;
+        this.message = message;
+        this.userBlocked = userBlocked;
     };
 
 }
